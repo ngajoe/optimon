@@ -28,8 +28,8 @@ def readfile():
     f=open("/local/optimon/metrics/metrics.out",'r+')
     data=f.read()
     f.close()
-    # f=open("/local/optimon/metrics",'w+')
-    # f.close()
+    f=open("/local/optimon/metrics/metrics.out",'w+')
+    f.close()
     return data
 
 if __name__ == '__main__':
