@@ -8,8 +8,10 @@ import logging
 import threading
 import time
 import os
+import datetime
 
 import grpc
+import grpc._channel
 import optimon_pb2
 import optimon_pb2_grpc
 
@@ -18,17 +20,28 @@ names=[]
 FIX_SIZE=100000
 starttime=[]
 def run(name, pos):
-    if not os.path.isdir("mkdir "+name):
+    if os.path.isdir("mkdir "+name):
         os.system("mkdir "+name)
     starttime.append(date.today())
-    # x=threading.Thread(target=moveifbigsize, args=(name,))
-    x=threading.Thread(target=moveiftime, args=(name,))   
-    x.start()
+    #x=threading.Thread(target=moveifbigsize, args=(name,))
+    #x=threading.Thread(target=moveiftime, args=(name,))   
+    #x.start()
     with grpc.insecure_channel(pollingnodes[pos]+':50051') as channel:
         stub = optimon_pb2_grpc.OptimonStub(channel)
+        count=1
         for i in range(5):
             time.sleep(1)
-            response = stub.HeartBeat(optimon_pb2.HeartBeatRequest(heartbeat='you'))
+            try:
+                response = stub.HeartBeat(optimon_pb2.HeartBeatRequest(heartbeat='you'))
+            except (grpc._channel._InactiveRpcError):
+                print("No HeartBeat")
+                count=count+1
+                time.sleep(2)
+                if count is 4:
+                    print("Polling Node is dead, returning")
+                    return
+                continue
+            count=1
             print("Is pollingnode active: " + str(response.success))
             data=stub.GetData(optimon_pb2.GetDataRequest(name='you'))
             f=open(name+"/longstorage.txt","a+")
@@ -63,7 +76,7 @@ def moveifbigsize(name):
         file=Path(path).stat().st_size
         print("Size of file is :", file, "bytes")
         if(file>FIX_SIZE):
-            os.system("mv longstorage.txt longstorage"+str(date.today())+".txt")
+            os.system("mv longstorage.txt longstorage"+str(datetime.datetime.isoformat(datetime.datetime.now()))+".txt")
             os.system("rm -rf longstorage.txt")
 
 def moveiftime(name):
@@ -71,7 +84,7 @@ def moveiftime(name):
     print(os.path.getmtime(path))
     print(time.time())
     if(1>FIX_SIZE):
-        os.system("mv longstorage.txt longstorage"+str(date.today())+".txt")
+        os.system("mv longstorage.txt longstorage"+str(datetime.datetime.isoformat(datetime.datetime.now()))+".txt")
         os.system("rm -rf longstorage.txt")
     
 
