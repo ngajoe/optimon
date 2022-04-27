@@ -20,30 +20,31 @@ names=[]
 FIX_SIZE=100000
 starttime=[]
 def run(name, pos):
-    if os.path.isdir("mkdir "+name):
-        os.system("mkdir "+name)
+    if not os.path.isdir(name):
+        os.mkdir(name)
     starttime.append(date.today())
     #x=threading.Thread(target=moveifbigsize, args=(name,))
     #x=threading.Thread(target=moveiftime, args=(name,))   
     #x.start()
-    with grpc.insecure_channel(pollingnodes[pos]+':50051') as channel:
+    with grpc.insecure_channel(str(pollingnodes[pos])) as channel:
         stub = optimon_pb2_grpc.OptimonStub(channel)
         count=1
-        for i in range(5):
-            time.sleep(1)
+        for i in range(100):
+            time.sleep(5)
             try:
                 response = stub.HeartBeat(optimon_pb2.HeartBeatRequest(heartbeat='you'))
             except (grpc._channel._InactiveRpcError):
                 print("No HeartBeat")
                 count=count+1
                 time.sleep(2)
-                if count is 4:
+                if count==4:
                     print("Polling Node is dead, returning")
                     return
                 continue
             count=1
             print("Is pollingnode active: " + str(response.success))
             data=stub.GetData(optimon_pb2.GetDataRequest(name='you'))
+
             f=open(name+"/longstorage.txt","a+")
             f.write(str(data.data))
             f.close()
