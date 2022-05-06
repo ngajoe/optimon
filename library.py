@@ -51,7 +51,7 @@ def run(name, pos):
             print(data)
 
 def fillpollingnodes():
-    f=open("pollingnodes.txt","r+")
+    f=open("./nodesaddress/pollingnodes.txt","r+")
     count=1
     for node in f.readlines():
         print(str(count),node)

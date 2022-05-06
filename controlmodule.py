@@ -1,11 +1,12 @@
 import os
 import configparser
-hostname="kalpit12@c220g2-011122.wisc.cloudlab.us"
+polling=[]
+library=[]
 
 def makePolling():
     config = configparser.ConfigParser()
-    config.read('pollingdefault.ini')
-    config.read('polling.ini')
+    config.read('./config/pollingdefault.ini')
+    config.read('./config/polling.ini')
     fd=open("polling.conf","w+")
     for section in config.sections():
         if section.find("inputs.snmp.field") == -1:
@@ -20,34 +21,47 @@ def makePolling():
         else:
             fd.write(" ["+section+"]]"+"\n")
             for option in config.options(section):
-                fd.write("  "+option+" = "+config[section][option]+"\n")
+                fd.write(" "+option+" = "+config[section][option]+"\n")
     fd.close()
-    os.system("scp -r polling.conf "+hostname+":")
-    os.system("ssh "+hostname+" systemctl reload telegraf")
+    for nodes in polling:
+        os.system("scp -r polling.conf "+nodes+":")
+        os.system("ssh "+nodes+" sudo systemctl reload telegraf")
 
 def makeLibrary():
     config = configparser.ConfigParser()
-    config.read('librarydefault.ini')
-    config.read('library.ini')
+    config.read('./config/librarydefault.ini')
+    config.read('./config/library.ini')
     fd=open("library.conf","w+")
     for section in config.sections():
         if(section[0]=='['):
-            fd.write("["+section+"]]"+"\n")
+            fd.write("["+section+"]]"+"\u00A0"+"\n")
+            for option in config.options(section):
+                fd.write("\u00A0 "+option+" = "+config[section][option]+"\u00A0"+"\n")
         else:
-            fd.write("["+section+"]"+"\n")
-        for option in config.options(section):
-            fd.write(" "+option+" = "+config[section][option]+"\n")
+            fd.write("["+section+"]"+"\u00A0"+"\n")
+            for option in config.options(section):
+                fd.write("\u00A0"+option+" = "+config[section][option]+"\u00A0"+"\n")
         fd.write("\n")
     fd.close()
-    os.system("scp -r library.conf "+hostname+":")
-    os.system("ssh "+hostname+" systemctl reload telegraf")
-    os.system("ssh "+hostname+" sudo systemctl stop influxdb")
-    os.system("ssh "+hostname+" sudo systemctl enable influxdb")
-    os.system("ssh "+hostname+" sudo systemctl start influxdb")
+    for nodes in library:
+        os.system("scp -r library.conf "+nodes+":")
+        os.system("ssh "+nodes+" sudo systemctl reload telegraf")
+        os.system("ssh "+nodes+" sudo systemctl stop influxdb")
+        os.system("ssh "+nodes+" sudo systemctl enable influxdb")
+        os.system("ssh "+nodes+" sudo systemctl start influxdb")
 
 
-
+def fillnodes():
+    f=open("./nodesaddress/polling.txt","r+")
+    for node in f.readlines():
+        polling.append(node)
+    f.close()
+    f=open("./nodesaddress/library.txt","r+")
+    for node in f.readlines():
+        library.append(node)
+    f.close()
 
 if __name__ == "__main__":
+    fillnodes()
     makePolling()
     makeLibrary()
