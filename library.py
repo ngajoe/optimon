@@ -18,18 +18,20 @@ import optimon_pb2_grpc
 pollingnodes=[]
 names=[]
 FIX_SIZE=100000
+FIX_TIME=1000000
 starttime=[]
 def run(name, pos):
     if not os.path.isdir(name):
         os.mkdir(name)
     starttime.append(date.today())
-    #x=threading.Thread(target=moveifbigsize, args=(name,))
+    #x=threading.Thread(target=moveifbigsize, args=(name,))#Uncomment this to move longstorage file after a fixed size
     #x=threading.Thread(target=moveiftime, args=(name,))   
     #x.start()
     with grpc.insecure_channel(str(pollingnodes[pos])) as channel:
         stub = optimon_pb2_grpc.OptimonStub(channel)
         count=1
         for i in range(100):
+        #while(1): #uncomment this line and comment "for" to run this for infinity
             time.sleep(5)
             try:
                 response = stub.HeartBeat(optimon_pb2.HeartBeatRequest(heartbeat='you'))
@@ -54,7 +56,6 @@ def fillpollingnodes():
     f=open("./nodesaddress/pollingnodes.txt","r+")
     count=1
     for node in f.readlines():
-        print(str(count),node)
         pollingnodes.append(node)
         names.append("node"+str(count))
         count=count+1
@@ -84,7 +85,7 @@ def moveiftime(name):
     path=name+'/longstorage.txt'
     print(os.path.getmtime(path))
     print(time.time())
-    if(1>FIX_SIZE):
+    if(time.time()-os.path.getmtime(path)>FIX_TIME):
         os.system("mv longstorage.txt longstorage"+str(datetime.datetime.isoformat(datetime.datetime.now()))+".txt")
         os.system("rm -rf longstorage.txt")
     

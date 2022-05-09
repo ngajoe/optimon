@@ -15,11 +15,11 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "io.grpc.examples.helloworld";
-option java_outer_classname = "HelloWorldProto";
+option java_package = "io.grpc.optimon";
+option java_outer_classname = "OptimonProto";
 option objc_class_prefix = "HLW";
 
-package helloworld;
+package optimon;
 
 service Optimon {
   rpc HeartBeat (HeartBeatRequest) returns (HeartBeatResponse){}
