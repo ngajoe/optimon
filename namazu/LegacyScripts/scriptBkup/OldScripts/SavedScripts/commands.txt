@@ -1,0 +1,3 @@
+mysql -u ipsuser0 -p --local-infile ips-db1
+
+rsync -av wej@nms-lab.boreas.net:~/joec/longhaul/ ~/DataFiles/nmslab/
